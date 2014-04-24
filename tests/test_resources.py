@@ -2,7 +2,7 @@ import json
 import requests
 import kloudless
 
-from mock import MagicMock, patch
+from mock import MagicMock, patch, call
 from requests.models import Response
 from kloudless.resources import Account, Folder, File
 
@@ -194,14 +194,24 @@ def test_file_update():
         new_data = file_data.copy()
         new_data['name'] = 'NewFileName'
         resp._content = json.dumps(new_data)
-        mock_req.return_value = resp
+        account_resp = Response()
+        account_resp._content = helpers.account
+        mock_req.side_effect = (resp,account_resp)
         file_obj.name = 'NewFileName'
         file_obj.parent_id = 'root'
         file_obj.save()
-        mock_req.assert_called_with(requests.patch,
-                                    'accounts/%s/files/%s' % (account.id,
-                                                              file_data['id']),
-                                    data={'parent_id': 'root',
-                                          'name': 'NewFileName'},
-                                    configuration=file_obj._configuration,
-                                    params={})
+        expected_calls = [
+                          # This is updating the file
+                          call(requests.patch,
+                               'accounts/%s/files/%s' % (account.id,
+                                                         file_data['id']),
+                               params={},
+                               data={'name': u'NewFileName',
+                                     'parent_id': 'root'},
+                               configuration=file_obj._configuration),
+                          # This is refreshing the parent resource
+                          call(requests.get,
+                               'accounts/%s' % account.id,
+                               configuration=account._configuration),
+                         ]
+        mock_req.assert_has_calls(expected_calls)
