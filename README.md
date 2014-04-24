@@ -106,6 +106,13 @@ Another example retrieving key information:
 
 * https://github.com/vinodc/cloud-text-editor creates folders and uploads files via the Kloudless API.
 
+## Tests
+The tests are written using [py.test](http://pytest.org) and can be run like so
+(from within this directory):
+```shell
+pip install tox
+tox
+```
 ## TODO
 
 * Tests!
@@ -117,4 +124,3 @@ Another example retrieving key information:
 
 * [requests](https://github.com/kennethreitz/requests) makes the API requests easy.
 * [stripe-python](https://github.com/stripe/stripe-python) was a useful resource while researching the interface for this API.
-

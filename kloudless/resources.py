@@ -412,7 +412,7 @@ class Folder(AccountBaseResource, RetrieveMixin, DeleteMixin, UpdateMixin,
 
     def contents(self):
         response = request(requests.get, "%s/contents" % self.detail_path(),
-                           configuration=self._configuration)
+                           configuration=self._configuration, params={})
         data = self.create_from_data(
             response.json(), parent_resource=self._parent_resource,
             configuration=self._configuration)
