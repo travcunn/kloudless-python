@@ -1,45 +1,52 @@
 import unittest
 import os
 
+import pytest
+
 import utils
 import sdk
 
-class Users(unittest.TestCase):
 
-    users = None
+@pytest.fixture(params=[acc for acc in utils.accounts])
+def account(request):
+    return request.param
 
-    def setUp(self):
-        self.users = self.account.users.all()
 
-    def not_admin(self):
-        return not self.account.admin
+class TestUsers:
 
-    def test_list_users(self):
-        if self.not_admin():
+    def not_admin(self, account):
+        return not account.admin
+
+    def test_list_users(self, account):
+
+        users = account.users.all()
+
+        if self.not_admin(account):
             return
-        self.assertTrue(self.users)
-        self.assertGreater(len(self.users), 0)
-        for user in self.users:
-            self.assertIsInstance(user, sdk.resources.User)
+        assert users
+        assert len(users) > 0
+        for user in users:
+            assert isinstance(user, sdk.resources.User)
 
-    def test_retrieve_user(self):
-        if self.not_admin():
-            return
-        user = self.account.users.retrieve(self.users[0].id)
-        self.assertEqual(type(user), sdk.resources.User)
-        self.assertEqual(user.id, self.users[0].id)
+    def test_retrieve_user(self, account):
 
-    def test_user_membership(self):
-        if self.not_admin():
+        users = account.users.all()
+
+        if self.not_admin(account):
             return
-        for user in self.users:
+
+        user = account.users.retrieve(users[0].id)
+        assert type(user) == sdk.resources.User
+        assert user.id == users[0].id
+
+    def test_user_membership(self, account):
+
+        users = account.users.all()
+
+        if self.not_admin(account):
+            return
+
+        for user in users:
             groups = user.get_groups()
             for group in groups:
-                self.assertIsInstance(group, sdk.resources.Group)
-
-def test_cases():
-    return [utils.create_test_case(acc, Users) for acc in utils.accounts]
-
-if __name__ == '__main__':
-    suite = utils.create_suite(test_cases())
-    unittest.TextTestRunner(verbosity=2).run(suite)
+                assert isinstance(group, sdk.resources.Group)
