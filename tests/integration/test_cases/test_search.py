@@ -4,34 +4,43 @@ import base64
 import random
 import time
 
-import utils
-import sdk
+import pytest
 
-class Search(unittest.TestCase):
+from . import utils
+import kloudless
+
+
+@pytest.fixture(params=[acc for acc in utils.accounts])
+def account(request):
+    return request.param
+
+
+class TestSearch:
 
     @utils.skip_long_test(services=['box'])
-    def test_simple_search(self):
-        acc = self.account
+    def test_simple_search(self, account):
+        acc = account
         test_file_name = 'search' + str(random.random())[2:] + '.txt'
         test_file = utils.create_test_file(acc, file_name=test_file_name)
         if acc.service == 'box':
             time.sleep(210)
         results = acc.search.all(q=test_file_name)
-        self.assertGreater(results, 0)
-        if results:
-            self.assertEqual(results[0].id, test_file.id)
+        assert results > 0
+        assert results[0].id == test_file.id
 
-    def test_bad_search(self):
+    def test_bad_search(self, account):
         q = base64.b64encode(os.urandom(40))
-        self.assertEqual(self.account.search.all(q=q), [])
+        assert account.search.all(q=q) == []
 
-    def test_empty_str_search(self):
-        with self.assertRaises(sdk.exceptions.APIException) as cm:
-            self.account.search.all(q='')
+    def test_empty_str_search(self, account):
+        try:
+            account.search.all(q='')
+        except kloudless.exceptions.APIException:
+            pass
 
     @utils.skip_long_test(services=['box'])
-    def test_mult_results_search(self):
-        acc = self.account
+    def test_mult_results_search(self, account):
+        acc = account
         test_file_name = 'search' + str(random.random())[2:] + '.txt'
         root_folder = utils.create_or_get_test_folder(acc)
         test_folder_1 = acc.folders.create(data={
@@ -47,12 +56,6 @@ class Search(unittest.TestCase):
         if acc.service == 'box':
             time.sleep(210)
         results = acc.search.all(q=test_file_name)
-        self.assertEqual({results[0].id, results[1].id},
-                         {test_file_1.id, test_file_2.id})
-
-def test_cases():
-    return [utils.create_test_case(acc, Search) for acc in utils.accounts]
-
-if __name__ == '__main__':
-    suite = utils.create_suite(test_cases())
-    unittest.TextTestRunner(verbosity=2).run(suite)
+        set1 = {results[0].id, results[1].id}
+        set2 = {test_file_1.id, test_file_2.id}
+        assert set1 == set2
