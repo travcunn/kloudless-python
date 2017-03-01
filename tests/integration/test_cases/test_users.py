@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-import utils
+from tests.integration.test_cases import utils
 import sdk
 
 

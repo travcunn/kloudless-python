@@ -12,7 +12,7 @@ setup_file = imp.load_source(
     'setup', os.path.join(curdir, '..', '..', '..', 'setup.py'))
 sys.modules['sdk'] = __import__(setup_file.package_name)
 
-import dynamic_case_module
+from tests.integration.test_cases import dynamic_case_module
 import sdk
 
 API_KEY = os.environ.get('API_KEY')
